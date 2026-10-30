@@ -1,0 +1,103 @@
+package com.tom7.opentext.ui.theme
+
+import android.app.Activity
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+
+private val DarkColorScheme = darkColorScheme(
+    primary = Grey100,
+    onPrimary = Grey1100,
+    primaryContainer = Grey900,
+    onPrimaryContainer = Grey100,
+    secondary = Grey700,
+    onSecondary = Grey50,
+    secondaryContainer = Grey1000,
+    onSecondaryContainer = Grey100,
+    tertiary = AccentGreen,
+    onTertiary = Grey1200,
+    background = Grey1100,
+    onBackground = Grey100,
+    surface = Grey1100,
+    onSurface = Grey100,
+    surfaceVariant = Grey900,
+    onSurfaceVariant = Grey500,
+    surfaceContainerLowest = Grey1200,
+    surfaceContainerLow = Grey1100,
+    surfaceContainer = Grey1000,
+    surfaceContainerHigh = Grey900,
+    surfaceContainerHighest = Grey800,
+    outline = BorderDarkStrong,
+    outlineVariant = BorderDarkBase,
+    error = Red500,
+    onError = Grey1200,
+    errorContainer = Red1200,
+    onErrorContainer = Red300,
+    inverseSurface = Grey100,
+    inverseOnSurface = Grey1100,
+    inversePrimary = Grey300,
+    scrim = Color(0xFF000000),
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = Grey1100,
+    onPrimary = Grey50,
+    primaryContainer = Grey200,
+    onPrimaryContainer = Grey1100,
+    secondary = Grey1000,
+    onSecondary = Grey50,
+    secondaryContainer = Grey200,
+    onSecondaryContainer = Grey1100,
+    tertiary = Green800,
+    onTertiary = Grey50,
+    background = Grey50,
+    onBackground = Grey1100,
+    surface = Grey50,
+    onSurface = Grey1100,
+    surfaceVariant = Grey200,
+    onSurfaceVariant = Grey700,
+    surfaceContainerLowest = Grey50,
+    surfaceContainerLow = Grey100,
+    surfaceContainer = Grey200,
+    surfaceContainerHigh = Grey300,
+    surfaceContainerHighest = Grey400,
+    outline = BorderLightStrong,
+    outlineVariant = BorderLightBase,
+    error = Red800,
+    onError = Grey50,
+    errorContainer = Red100,
+    onErrorContainer = Red1000,
+    inverseSurface = Grey1100,
+    inverseOnSurface = Grey100,
+    inversePrimary = Grey600,
+    scrim = Color(0xFF000000),
+)
+
+@Composable
+fun OpenTextTheme(
+    darkTheme: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
+    MaterialTheme(
+        colorScheme = colors,
+        typography = Typography,
+        content = content,
+    )
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+    }
+}
