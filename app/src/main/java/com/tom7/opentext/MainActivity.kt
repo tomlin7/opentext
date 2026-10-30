@@ -22,11 +22,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tom7.opentext.data.LocalWorkspace
 import com.tom7.opentext.data.RemoteWorkspace
+import com.tom7.opentext.data.SettingsStore
 import com.tom7.opentext.data.Workspace
 import com.tom7.opentext.data.WorkspaceStore
 import com.tom7.opentext.ui.connect.ConnectScreen
 import com.tom7.opentext.ui.editor.EditorScreen
 import com.tom7.opentext.ui.home.HomeScreen
+import com.tom7.opentext.ui.settings.SettingsScreen
 import com.tom7.opentext.ui.theme.Grey1100
 import com.tom7.opentext.ui.theme.OpenTextTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,6 +85,7 @@ fun OpenTextRoot(
 ) {
     val context = LocalContext.current
     val store = remember { WorkspaceStore(context) }
+    val settings = remember { SettingsStore(context) }
     val client = remember {
         OkHttpClient.Builder()
             .connectTimeout(8, TimeUnit.SECONDS)
@@ -93,6 +96,7 @@ fun OpenTextRoot(
     }
     var workspace by remember { mutableStateOf<Workspace?>(null) }
     var showConnect by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
 
     fun openLocal(uri: Uri) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -109,6 +113,12 @@ fun OpenTextRoot(
         if (uri != null) openLocal(uri)
     }
 
+    fun openFolder() {
+        val lastUri = store.lastLocalTree
+        val initialUri = if (lastUri != null) Uri.parse(lastUri) else null
+        folderLauncher.launch(initialUri)
+    }
+
     LaunchedEffect(remote) {
         val value = remote ?: return@LaunchedEffect
         store.remoteUrl = value.url
@@ -120,25 +130,31 @@ fun OpenTextRoot(
 
     OpenTextTheme {
         Box(Modifier.fillMaxSize().background(Grey1100)) {
-            val current = workspace
             when {
-                current != null -> EditorScreen(
-                    workspace = current,
+                showSettings -> SettingsScreen(
+                    settingsStore = settings,
+                    onBack = { showSettings = false }
+                )
+                workspace != null -> EditorScreen(
+                    workspace = workspace!!,
                     onExit = { workspace = null },
+                    onOpenSettings = { showSettings = true }
                 )
                 showConnect -> ConnectScreen(
                     client = client,
                     store = store,
                     onBack = { showConnect = false },
-                    onConnected = { workspace = it },
+                    onConnected = { workspace = it }
                 )
                 else -> HomeScreen(
                     recentLocalLabel = store.lastLocalLabel,
                     recentRemoteDirectory = store.remoteDirectory,
-                    onOpenFolder = { folderLauncher.launch(null) },
+                    onOpenFolder = { openFolder() },
                     onConnect = { showConnect = true },
                     onReopenLocal = {
-                        store.lastLocalTree?.let { saved -> openLocal(Uri.parse(saved)) }
+                        store.lastLocalTree?.let { uriString ->
+                            openLocal(Uri.parse(uriString))
+                        }
                     },
                     onReopenRemote = {
                         val url = store.remoteUrl
@@ -149,6 +165,7 @@ fun OpenTextRoot(
                             showConnect = true
                         }
                     },
+                    onSettings = { showSettings = true }
                 )
             }
         }

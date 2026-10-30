@@ -207,6 +207,11 @@ class EditorViewModel : ViewModel() {
         error = null
     }
 
+    fun setLanguage(index: Int, language: Language) {
+        if (index !in files.indices) return
+        files = files.toMutableList().also { it[index] = it[index].copy(language = language) }
+    }
+
     /** Recursively index text files for quick open. Bounded so a huge tree stays responsive. */
     suspend fun buildIndex(): List<Entry> {
         val workspace = workspace ?: return emptyList()

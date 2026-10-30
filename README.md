@@ -5,19 +5,19 @@ colour tokens. It edits folders **on the device** and **on your machine** throug
 server, so it works with or without [OpenRemote](https://github.com/tomlin7/openremote).
 
 ```
-┌──────────────────────────┐
-│ ☰  project        ⌕  ▣  ←│   Zed-ish chrome: one accent, no decoration
-├──────────────────────────┤
+┌───────────────────────────┐
+│ ☰  project              ⌕│   Zed-ish chrome: one accent, no decoration
+├───────────────────────────┤
 │ main.kt ×                 │   tabs only when you need them
-├──────────────────────────┤
+├───────────────────────────┤
 │ 1  package demo           │
 │ 2                         │   line numbers track the vertical scroll
 │ 3  fun main() {           │
 │ 4      println("hi")      │   One Dark syntax over OpenCode grey
 │ 5  }                      │
-├──────────────────────────┤
+├───────────────────────────┤
 │ Kotlin      Ln 4, Col 18  │   quiet status bar
-└──────────────────────────┘
+└───────────────────────────┘
 ```
 
 ## What it does

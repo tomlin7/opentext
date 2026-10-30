@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -73,6 +74,7 @@ import kotlinx.coroutines.launch
 fun EditorScreen(
     workspace: Workspace,
     onExit: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val vm: EditorViewModel = viewModel(key = "editor:${workspace.id}")
     LaunchedEffect(workspace.id) { vm.open(workspace) }
@@ -83,6 +85,7 @@ fun EditorScreen(
     var caretLine by remember { mutableStateOf(1) }
     var caretColumn by remember { mutableStateOf(1) }
     var quickOpen by remember { mutableStateOf(false) }
+    var showLanguagePicker by remember { mutableStateOf(false) }
     var index by remember(workspace.id) { mutableStateOf<List<Entry>>(emptyList()) }
     var exitConfirm by remember { mutableStateOf(false) }
 
@@ -174,10 +177,11 @@ fun EditorScreen(
             },
             bottomBar = {
                 StatusBar(
-                    language = active?.language?.label ?: "OpenText",
+                    language = active?.language?.label ?: "Plain text",
                     modified = active?.modified == true,
                     line = caretLine,
                     column = caretColumn,
+                    onLanguageClick = { showLanguagePicker = true }
                 )
             },
         ) { inner ->
@@ -227,6 +231,40 @@ fun EditorScreen(
                 quickOpen = false
                 vm.openFile(entry)
             },
+        )
+    }
+
+    if (showLanguagePicker && vm.active != null) {
+        AlertDialog(
+            onDismissRequest = { showLanguagePicker = false },
+            title = { Text("Select Language") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    Language.entries.forEach { language ->
+                        Text(
+                            text = language.label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    vm.setLanguage(vm.activeIndex, language)
+                                    showLanguagePicker = false
+                                }
+                                .padding(vertical = 12.dp),
+                            color = if (language == vm.active!!.language) Accent else Grey100
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguagePicker = false }) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = Grey1000,
         )
     }
 
@@ -397,6 +435,7 @@ private fun StatusBar(
     modified: Boolean,
     line: Int,
     column: Int,
+    onLanguageClick: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().background(Grey1000)) {
         HorizontalDivider(color = BorderDarkBase)
@@ -414,6 +453,7 @@ private fun StatusBar(
                 style = MaterialTheme.typography.labelSmall,
                 color = Grey500,
                 maxLines = 1,
+                modifier = Modifier.clickable(onClick = onLanguageClick)
             )
             Spacer(Modifier.weight(1f))
             Text(

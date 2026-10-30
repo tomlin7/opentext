@@ -57,25 +57,6 @@ fun CodeEditor(
     val lineCount = remember(value.text) { value.text.count { it == '\n' } + 1 }
 
     Row(modifier.fillMaxSize()) {
-        Box(Modifier.width(46.dp).fillMaxHeight().clipToBounds()) {
-            Column(
-                Modifier
-                    .graphicsLayer { translationY = -vertical.value.toFloat() }
-                    .padding(top = 8.dp),
-            ) {
-                for (line in 1..lineCount) {
-                    Text(
-                        text = line.toString(),
-                        style = GutterTextStyle,
-                        color = Grey600,
-                        textAlign = TextAlign.End,
-                        maxLines = 1,
-                        modifier = Modifier.fillMaxWidth().padding(end = 10.dp),
-                    )
-                }
-            }
-        }
-
         Box(
             Modifier
                 .weight(1f)
@@ -83,22 +64,35 @@ fun CodeEditor(
                 .verticalScroll(vertical)
                 .horizontalScroll(horizontal),
         ) {
-            BasicTextField(
-                value = value,
-                onValueChange = { next ->
-                    value = next
-                    onTextChange(next.text)
-                    val caret = next.selection.start.coerceIn(0, next.text.length)
-                    val before = next.text.take(caret)
-                    val line = before.count { it == '\n' } + 1
-                    val column = caret - before.lastIndexOf('\n')
-                    onCaret(line, column)
-                },
-                textStyle = CodeTextStyle.copy(color = Syntax.text),
-                cursorBrush = SolidColor(Accent),
-                visualTransformation = transformation,
-                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 24.dp, bottom = 16.dp),
-            )
+            Row {
+                // Line numbers as a single Text block to match editor's line heights
+                Text(
+                    text = (1..lineCount).joinToString("\n"),
+                    style = GutterTextStyle,
+                    color = Grey600,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .width(46.dp)
+                        .padding(top = 8.dp, end = 10.dp, start = 4.dp, bottom = 16.dp),
+                )
+
+                BasicTextField(
+                    value = value,
+                    onValueChange = { next ->
+                        value = next
+                        onTextChange(next.text)
+                        val caret = next.selection.start.coerceIn(0, next.text.length)
+                        val before = next.text.take(caret)
+                        val line = before.count { it == '\n' } + 1
+                        val column = caret - before.lastIndexOf('\n')
+                        onCaret(line, column)
+                    },
+                    textStyle = CodeTextStyle.copy(color = Syntax.text),
+                    cursorBrush = SolidColor(Accent),
+                    visualTransformation = transformation,
+                    modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 24.dp, bottom = 16.dp),
+                )
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.tom7.opentext.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,13 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.CloudQueue
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,13 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tom7.opentext.ui.theme.Accent
-import com.tom7.opentext.ui.theme.BorderDarkBase
 import com.tom7.opentext.ui.theme.Grey100
-import com.tom7.opentext.ui.theme.Grey1000
 import com.tom7.opentext.ui.theme.Grey1100
 import com.tom7.opentext.ui.theme.Grey500
-import com.tom7.opentext.ui.theme.Grey600
+import com.tom7.opentext.ui.theme.Grey700
 
 @Composable
 fun HomeScreen(
@@ -46,79 +44,70 @@ fun HomeScreen(
     onConnect: () -> Unit,
     onReopenLocal: () -> Unit,
     onReopenRemote: () -> Unit,
+    onSettings: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Grey1100)
-            .safeDrawingPadding()
-            .padding(horizontal = 24.dp, vertical = 32.dp),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 24.dp),
     ) {
-        Spacer(Modifier.height(48.dp))
-        Text(
-            text = "opentext",
-            color = Grey100,
-            fontSize = 34.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = (-1).sp,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = "A quiet, fast editor for your phone.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Grey500,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "opentext",
+                color = Grey100,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            IconButton(onClick = onSettings) {
+                Icon(Icons.Outlined.Settings, contentDescription = "Settings", tint = Grey500)
+            }
+        }
 
-        Spacer(Modifier.height(36.dp))
+        Spacer(Modifier.height(32.dp))
 
         ActionRow(
             icon = Icons.Outlined.FolderOpen,
             title = "Open folder",
-            subtitle = "Browse files on this device",
             onClick = onOpenFolder,
         )
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         ActionRow(
             icon = Icons.Outlined.CloudQueue,
             title = "Connect to server",
-            subtitle = "Edit a project through OpenRemote",
             onClick = onConnect,
         )
 
         if (recentLocalLabel != null || recentRemoteDirectory != null) {
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(32.dp))
             Text(
-                text = "RECENT",
+                text = "Recent",
                 style = MaterialTheme.typography.labelSmall,
-                color = Grey600,
-                letterSpacing = 1.sp,
+                color = Grey700,
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             if (recentLocalLabel != null) {
                 RecentRow(
                     icon = Icons.Outlined.FolderOpen,
                     title = recentLocalLabel,
-                    subtitle = "On this device",
                     onClick = onReopenLocal,
                 )
-                if (recentRemoteDirectory != null) Spacer(Modifier.height(6.dp))
+                if (recentRemoteDirectory != null) Spacer(Modifier.height(4.dp))
             }
             if (recentRemoteDirectory != null) {
                 RecentRow(
                     icon = Icons.Outlined.CloudQueue,
                     title = recentRemoteDirectory.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\').ifBlank { recentRemoteDirectory },
-                    subtitle = recentRemoteDirectory,
                     onClick = onReopenRemote,
                 )
             }
         }
-
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = "Works offline. Connects through the OpenCode server.",
-            style = MaterialTheme.typography.labelSmall,
-            color = Grey600,
-        )
     }
 }
 
@@ -126,30 +115,18 @@ fun HomeScreen(
 private fun ActionRow(
     icon: ImageVector,
     title: String,
-    subtitle: String,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Grey1000, RoundedCornerShape(12.dp))
-            .border(1.dp, BorderDarkBase, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 15.dp),
+            .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = Accent, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = Grey100)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Grey500)
-        }
-        Icon(
-            Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = Grey600,
-            modifier = Modifier.size(18.dp),
-        )
+        Icon(icon, contentDescription = null, tint = Grey500, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = Grey100)
     }
 }
 
@@ -157,38 +134,29 @@ private fun ActionRow(
 private fun RecentRow(
     icon: ImageVector,
     title: String,
-    subtitle: String,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 10.dp, horizontal = 4.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = Grey600, modifier = Modifier.size(16.dp))
+        Icon(icon, contentDescription = null, tint = Grey700, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Grey100,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = Grey600,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Grey100,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
         Icon(
             Icons.Outlined.ChevronRight,
             contentDescription = null,
-            tint = Grey600,
+            tint = Grey700,
             modifier = Modifier.size(16.dp),
         )
     }
