@@ -26,11 +26,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.automirrored.outlined.Redo
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,6 +93,9 @@ fun EditorScreen(
     var caretColumn by remember { mutableStateOf(1) }
     var quickOpen by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
+    var showQuickActions by remember { mutableStateOf(false) }
+    var fontSize by remember { mutableStateOf(14) }
+    var wordWrap by remember { mutableStateOf(false) }
     var index by remember(workspace.id) { mutableStateOf<List<Entry>>(emptyList()) }
     var exitConfirm by remember { mutableStateOf(false) }
 
@@ -140,6 +148,129 @@ fun EditorScreen(
                         }
                     }
                     HorizontalDivider(color = BorderDarkBase)
+                    
+                    // Quick Actions Section
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showQuickActions = !showQuickActions }
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Quick Actions",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Grey100
+                        )
+                        Icon(
+                            imageVector = if (showQuickActions) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                            contentDescription = if (showQuickActions) "Collapse" else "Expand",
+                            tint = Grey500,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    
+                    if (showQuickActions) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
+                            // Font Size Controls
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Font Size",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Grey500
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { if (fontSize > 8) fontSize-- },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Remove,
+                                            contentDescription = "Decrease font size",
+                                            tint = Grey100,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = "${fontSize}sp",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Grey100,
+                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                    )
+                                    IconButton(
+                                        onClick = { if (fontSize < 24) fontSize++ },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Add,
+                                            contentDescription = "Increase font size",
+                                            tint = Grey100,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Word Wrap Toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Word Wrap",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Grey500
+                                )
+                                androidx.compose.material3.Switch(
+                                    checked = wordWrap,
+                                    onCheckedChange = { wordWrap = it },
+                                    colors = androidx.compose.material3.SwitchDefaults.colors(
+                                        checkedThumbColor = Accent,
+                                        checkedTrackColor = Accent.copy(alpha = 0.5f),
+                                        uncheckedThumbColor = Grey500,
+                                        uncheckedTrackColor = Grey500.copy(alpha = 0.3f)
+                                    )
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // Settings Button
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onOpenSettings() }
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Settings,
+                                    contentDescription = null,
+                                    tint = Grey500,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Settings",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Grey100,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
+                        HorizontalDivider(color = BorderDarkBase)
+                    }
                 }
                 Box(Modifier.weight(1f)) {
                     FileTree(
