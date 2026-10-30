@@ -130,7 +130,7 @@ private fun FilesTab(
     } else {
         LazyColumn {
             items(matches, key = { it.path }) { entry ->
-                FileItem(entry, onFileOpen)
+                FileItem(entry) { onFileOpen(entry) }
             }
             item { Spacer(Modifier.height(8.dp)) }
         }
@@ -209,7 +209,7 @@ private fun CommandsTab(
     } else {
         LazyColumn {
             items(matches, key = { it.id }) { command ->
-                CommandItem(command, onCommand)
+                CommandItem(command) { onCommand(command.id) }
             }
             item { Spacer(Modifier.height(8.dp)) }
         }

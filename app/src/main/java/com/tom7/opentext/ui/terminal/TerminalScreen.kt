@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.tom7.opentext.data.PtySession
+import com.tom7.opentext.data.PtyStatus
 import com.tom7.opentext.ui.theme.Grey100
 import com.tom7.opentext.ui.theme.Grey1000
 import com.tom7.opentext.ui.theme.Grey500
@@ -105,9 +106,9 @@ fun TerminalScreen(
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
-                            text = activeSession!!.status,
+                            text = activeSession!!.status.name,
                             style = MaterialTheme.typography.bodySmall,
-                            color = if (activeSession!!.status == "running") Color(0xFF4CAF50) else Color(0xFFF44336)
+                            color = if (activeSession!!.status == PtyStatus.RUNNING) Color(0xFF4CAF50) else Color(0xFFF44336)
                         )
                     }
                 }
@@ -254,9 +255,9 @@ fun TerminalScreen(
                                         )
                                     }
                                     Text(
-                                        text = session.status,
+                                        text = session.status.name,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (session.status == "running") Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        color = if (session.status == PtyStatus.RUNNING) Color(0xFF4CAF50) else Color(0xFFF44336)
                                     )
                                 }
                             }
