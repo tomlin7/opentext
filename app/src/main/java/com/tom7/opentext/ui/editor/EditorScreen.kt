@@ -37,6 +37,7 @@ import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +70,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tom7.opentext.data.Entry
+import com.tom7.opentext.data.PtyClient
 import com.tom7.opentext.data.Workspace
 import com.tom7.opentext.ui.theme.Accent
 import com.tom7.opentext.ui.theme.BorderDarkBase
@@ -78,12 +80,15 @@ import com.tom7.opentext.ui.theme.Grey1100
 import com.tom7.opentext.ui.theme.Grey500
 import com.tom7.opentext.ui.theme.Grey600
 import com.tom7.opentext.ui.theme.Grey900
+import com.tom7.opentext.ui.terminal.TerminalScreen
+import com.tom7.opentext.ui.terminal.TerminalViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(
     workspace: Workspace,
+    ptyClient: PtyClient? = null,
     onExit: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -99,6 +104,7 @@ fun EditorScreen(
     var showLanguagePicker by remember { mutableStateOf(false) }
     var showQuickActions by remember { mutableStateOf(false) }
     var showCommandPalette by remember { mutableStateOf(false) }
+    var showTerminal by remember { mutableStateOf(false) }
     var fontSize by remember { mutableStateOf(14) }
     var wordWrap by remember { mutableStateOf(false) }
     var index by remember(workspace.id) { mutableStateOf<List<Entry>>(emptyList()) }
@@ -319,9 +325,11 @@ fun EditorScreen(
                     ActionBar(
                         onSave = { vm.save() },
                         onQuickOpen = { quickOpen = true },
+                        onTerminal = { showTerminal = true },
                         onUndo = { /* TODO: implement undo */ },
                         onRedo = { /* TODO: implement redo */ },
                         canSave = active?.modified == true && !vm.saving,
+                        showTerminal = ptyClient != null,
                     )
                     StatusBar(
                         language = active?.language?.label ?: "Plain text",
@@ -422,6 +430,16 @@ fun EditorScreen(
                     "theme" -> { /* TODO: Implement theme setting */ }
                 }
             },
+        )
+    }
+
+    if (showTerminal && ptyClient != null) {
+        val terminalViewModel = remember(ptyClient, workspace.root) {
+            TerminalViewModel(ptyClient, workspace.root)
+        }
+        TerminalScreen(
+            viewModel = terminalViewModel,
+            onDismiss = { showTerminal = false }
         )
     }
 
@@ -665,9 +683,11 @@ private fun StatusBar(
 private fun ActionBar(
     onSave: () -> Unit,
     onQuickOpen: () -> Unit,
+    onTerminal: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
     canSave: Boolean,
+    showTerminal: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -710,6 +730,19 @@ private fun ActionBar(
                 tint = Grey500,
                 modifier = Modifier.size(20.dp),
             )
+        }
+        if (showTerminal) {
+            IconButton(
+                onClick = onTerminal,
+                modifier = Modifier.size(48.dp),
+            ) {
+                Icon(
+                    Icons.Outlined.Terminal,
+                    contentDescription = "Terminal",
+                    tint = Grey500,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
         IconButton(
             onClick = onSave,

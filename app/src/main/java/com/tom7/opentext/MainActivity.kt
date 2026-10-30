@@ -101,6 +101,11 @@ fun OpenTextRoot(
     var showSettings by remember { mutableStateOf(false) }
     var connectionError by remember { mutableStateOf<String?>(null) }
 
+    // Create PtyClient when workspace is remote
+    val ptyClient = remember(workspace) {
+        (workspace as? RemoteWorkspace)?.createPtyClient()
+    }
+
     fun openLocal(uri: Uri) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         runCatching { context.contentResolver.takePersistableUriPermission(uri, flags) }
@@ -152,6 +157,7 @@ fun OpenTextRoot(
                 )
                 workspace != null -> EditorScreen(
                     workspace = workspace!!,
+                    ptyClient = ptyClient,
                     onExit = { workspace = null },
                     onOpenSettings = { showSettings = true }
                 )
