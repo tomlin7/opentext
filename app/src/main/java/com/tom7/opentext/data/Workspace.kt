@@ -125,7 +125,7 @@ private data class RemoteLocation(val directory: String = "")
 
 class RemoteWorkspace(
     private val baseUrl: String,
-    password: String,
+    private val password: String,
     override val root: String,
     private val client: OkHttpClient,
 ) : Workspace {
@@ -201,6 +201,12 @@ class RemoteWorkspace(
 
     private fun encodePath(path: String): String =
         path.split('/').joinToString("/") { URLEncoder.encode(it, "UTF-8").replace("+", "%20") }
+
+    /**
+     * Create a PtyClient for terminal session management.
+     * Uses the same credentials as this workspace.
+     */
+    fun createPtyClient(): PtyClient = PtyClient(baseUrl, password, client)
 }
 
 // ---------------------------------------------------------------------------
