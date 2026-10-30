@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.automirrored.outlined.Redo
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Refresh
@@ -176,13 +178,23 @@ fun EditorScreen(
                 }
             },
             bottomBar = {
-                StatusBar(
-                    language = active?.language?.label ?: "Plain text",
-                    modified = active?.modified == true,
-                    line = caretLine,
-                    column = caretColumn,
-                    onLanguageClick = { showLanguagePicker = true }
-                )
+                Column {
+                    // Bottom action bar for mobile
+                    ActionBar(
+                        onSave = { vm.save() },
+                        onQuickOpen = { quickOpen = true },
+                        onUndo = { /* TODO: implement undo */ },
+                        onRedo = { /* TODO: implement redo */ },
+                        canSave = active?.modified == true && !vm.saving,
+                    )
+                    StatusBar(
+                        language = active?.language?.label ?: "Plain text",
+                        modified = active?.modified == true,
+                        line = caretLine,
+                        column = caretColumn,
+                        onLanguageClick = { showLanguagePicker = true }
+                    )
+                }
             },
         ) { inner ->
             Column(Modifier.fillMaxSize().padding(inner)) {
@@ -386,12 +398,12 @@ private fun TabStrip(
     onClose: (Int) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().background(Grey1000)) {
-        LazyRow(Modifier.fillMaxWidth().height(34.dp)) {
+        LazyRow(Modifier.fillMaxWidth().height(44.dp)) {
             itemsIndexed(files, key = { _, file -> file.path }) { index, file ->
                 val selected = index == activeIndex
                 Row(
                     modifier = Modifier
-                        .height(34.dp)
+                        .height(44.dp)
                         .background(if (selected) Grey1100 else Grey1000)
                         .clickable { onSelect(index) }
                         .padding(start = 12.dp, end = 4.dp),
@@ -410,13 +422,13 @@ private fun TabStrip(
                     }
                     IconButton(
                         onClick = { onClose(index) },
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             Icons.Outlined.Close,
                             contentDescription = "Close ${file.name}",
                             tint = Grey600,
-                            modifier = Modifier.size(13.dp),
+                            modifier = Modifier.size(16.dp),
                         )
                     }
                 }
@@ -443,7 +455,7 @@ private fun StatusBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .height(26.dp)
+                .height(36.dp)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -465,6 +477,71 @@ private fun StatusBar(
                 text = if (modified) "Unsaved" else "Saved",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (modified) Accent else Grey600,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionBar(
+    onSave: () -> Unit,
+    onQuickOpen: () -> Unit,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
+    canSave: Boolean,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Grey1000)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(
+            onClick = onUndo,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Outlined.Undo,
+                contentDescription = "Undo",
+                tint = Grey500,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        IconButton(
+            onClick = onRedo,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Outlined.Redo,
+                contentDescription = "Redo",
+                tint = Grey500,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        IconButton(
+            onClick = onQuickOpen,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                Icons.Outlined.Search,
+                contentDescription = "Quick open",
+                tint = Grey500,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        IconButton(
+            onClick = onSave,
+            enabled = canSave,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                Icons.Outlined.Save,
+                contentDescription = "Save",
+                tint = if (canSave) Accent else Grey600,
+                modifier = Modifier.size(20.dp),
             )
         }
     }
