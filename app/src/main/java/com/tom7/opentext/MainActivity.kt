@@ -25,6 +25,8 @@ import com.tom7.opentext.data.RemoteWorkspace
 import com.tom7.opentext.data.SettingsStore
 import com.tom7.opentext.data.Workspace
 import com.tom7.opentext.data.WorkspaceStore
+import com.tom7.opentext.data.normalizeServerUrl
+import com.tom7.opentext.data.probeRemote
 import com.tom7.opentext.ui.connect.ConnectScreen
 import com.tom7.opentext.ui.editor.EditorScreen
 import com.tom7.opentext.ui.home.HomeScreen
@@ -97,6 +99,7 @@ fun OpenTextRoot(
     var workspace by remember { mutableStateOf<Workspace?>(null) }
     var showConnect by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+    var connectionError by remember { mutableStateOf<String?>(null) }
 
     fun openLocal(uri: Uri) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -121,10 +124,20 @@ fun OpenTextRoot(
 
     LaunchedEffect(remote) {
         val value = remote ?: return@LaunchedEffect
-        store.remoteUrl = value.url
-        store.remotePassword = value.password
-        store.remoteDirectory = value.directory
-        workspace = RemoteWorkspace(value.url, value.password, value.directory, client)
+        val normalized = normalizeServerUrl(value.url)
+        if (normalized != null) {
+            try {
+                val probedWorkspace = probeRemote(normalized, value.password, client)
+                store.remoteUrl = normalized
+                store.remotePassword = value.password
+                store.remoteDirectory = probedWorkspace.root
+                workspace = probedWorkspace
+            } catch (e: Exception) {
+                connectionError = e.message ?: "Could not connect to server"
+            }
+        } else {
+            connectionError = "Invalid server URL"
+        }
         onConsumed()
     }
 
@@ -149,6 +162,8 @@ fun OpenTextRoot(
                 else -> HomeScreen(
                     recentLocalLabel = store.lastLocalLabel,
                     recentRemoteDirectory = store.remoteDirectory,
+                    connectionError = connectionError,
+                    onDismissError = { connectionError = null },
                     onOpenFolder = { openFolder() },
                     onConnect = { showConnect = true },
                     onReopenLocal = {
