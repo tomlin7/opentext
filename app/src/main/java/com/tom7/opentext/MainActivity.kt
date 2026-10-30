@@ -127,11 +127,13 @@ fun OpenTextRoot(
         val normalized = normalizeServerUrl(value.url)
         if (normalized != null) {
             try {
-                val probedWorkspace = probeRemote(normalized, value.password, client)
+                // Verify connection works by probing, but use the directory from the intent
+                probeRemote(normalized, value.password, client)
+                val remoteWorkspace = RemoteWorkspace(normalized, value.password, value.directory, client)
                 store.remoteUrl = normalized
                 store.remotePassword = value.password
-                store.remoteDirectory = probedWorkspace.root
-                workspace = probedWorkspace
+                store.remoteDirectory = value.directory
+                workspace = remoteWorkspace
             } catch (e: Exception) {
                 connectionError = e.message ?: "Could not connect to server"
             }
