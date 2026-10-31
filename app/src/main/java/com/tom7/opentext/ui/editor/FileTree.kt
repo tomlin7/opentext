@@ -61,14 +61,14 @@ fun FileTree(
                             else -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
                         },
                         contentDescription = null,
-                        tint = Grey500,
+                        tint = if (selected) Grey100 else Grey500,
                         modifier = Modifier.size(14.dp),
                     )
                     Spacer(Modifier.width(2.dp))
                     Icon(
                         imageVector = if (row.expanded) Icons.Outlined.FolderOpen else Icons.Outlined.Folder,
                         contentDescription = null,
-                        tint = Grey500,
+                        tint = if (selected) Accent else Grey100,
                         modifier = Modifier.size(15.dp),
                     )
                 } else {

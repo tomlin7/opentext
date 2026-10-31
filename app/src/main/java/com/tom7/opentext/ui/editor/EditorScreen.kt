@@ -1,11 +1,9 @@
 package com.tom7.opentext.ui.editor
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,9 +24,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
@@ -58,7 +58,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -234,6 +233,8 @@ fun EditorScreen(
                     line = caretLine,
                     column = caretColumn,
                     onLanguageClick = { showLanguagePicker = true },
+                    onSave = { vm.save() },
+                    canSave = active?.modified == true && !vm.saving,
                 )
             },
         ) { inner ->
@@ -244,22 +245,44 @@ fun EditorScreen(
                         activeIndex = vm.activeIndex,
                         onSelect = { vm.select(it) },
                         onClose = { vm.requestClose(it) },
+                        onOpenSidebar = { scope.launch { drawer.open() } },
+                        onNewFile = { /* TODO: Implement new file */ },
                     )
-                }
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragEnd = {},
-                                onVerticalDrag = { change, dragAmount ->
-                                    if (dragAmount > 100f) {
-                                        showCommandPalette = true
-                                    }
-                                }
+                } else {
+                    // Show sidebar button even when no files are open
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(32.dp)
+                            .background(Grey1100),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        IconButton(
+                            onClick = { scope.launch { drawer.open() } },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Menu,
+                                contentDescription = "Open file tree",
+                                tint = Grey500,
+                                modifier = Modifier.size(18.dp),
                             )
                         }
-                ) {
+                        Spacer(Modifier.weight(1f))
+                        IconButton(
+                            onClick = { /* TODO: Implement new file */ },
+                            modifier = Modifier.size(32.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Add,
+                                contentDescription = "New file",
+                                tint = Grey500,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+                Box(Modifier.weight(1f)) {
                     if (active == null) {
                         EmptyEditor()
                     } else {
@@ -418,58 +441,105 @@ private fun MiniTabStrip(
     activeIndex: Int,
     onSelect: (Int) -> Unit,
     onClose: (Int) -> Unit,
+    onOpenSidebar: () -> Unit,
+    onNewFile: () -> Unit,
 ) {
     var expandedTab by remember { mutableStateOf<Int?>(null) }
     
-    LazyRow(
+    Row(
         Modifier
             .fillMaxWidth()
-            .height(28.dp)
-            .background(Grey1100)
+            .height(32.dp)
+            .background(Grey1100),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        itemsIndexed(files, key = { _, file -> file.path }) { index, file ->
-            val selected = index == activeIndex
-            Box(
-                modifier = Modifier
-                    .height(28.dp)
-                    .combinedClickable(
-                        onClick = { onSelect(index) },
-                        onLongClick = { expandedTab = index }
+        // Sidebar button on left
+        IconButton(
+            onClick = onOpenSidebar,
+            modifier = Modifier.size(32.dp),
+        ) {
+            Icon(
+                Icons.Outlined.Menu,
+                contentDescription = "Open file tree",
+                tint = Grey500,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        
+        // Tabs in middle
+        LazyRow(
+            Modifier.weight(1f).height(32.dp)
+        ) {
+            itemsIndexed(files, key = { _, file -> file.path }) { index, file ->
+                val selected = index == activeIndex
+                Row(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .combinedClickable(
+                            onClick = { onSelect(index) },
+                            onLongClick = { expandedTab = index }
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .drawBehind {
+                            if (selected) {
+                                drawLine(
+                                    color = Accent,
+                                    start = Offset(0f, size.height - 1.5f),
+                                    end = Offset(size.width, size.height - 1.5f),
+                                    strokeWidth = 3f
+                                )
+                            }
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = file.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (selected) Grey100 else Grey500,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    .padding(horizontal = 12.dp)
-                    .drawBehind {
-                        if (selected) {
-                            drawLine(
-                                color = Accent,
-                                start = Offset(0f, size.height - 1.5f),
-                                end = Offset(size.width, size.height - 1.5f),
-                                strokeWidth = 3f
-                            )
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = file.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (selected) Grey100 else Grey500,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            
-            DropdownMenu(
-                expanded = expandedTab == index,
-                onDismissRequest = { expandedTab = null }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Close") },
-                    onClick = {
-                        onClose(index)
-                        expandedTab = null
+                    Spacer(Modifier.width(4.dp))
+                    // Close button
+                    IconButton(
+                        onClick = { onClose(index) },
+                        modifier = Modifier.size(16.dp),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = "Close ${file.name}",
+                            tint = Grey600,
+                            modifier = Modifier.size(12.dp),
+                        )
                     }
-                )
+                }
+                
+                DropdownMenu(
+                    expanded = expandedTab == index,
+                    onDismissRequest = { expandedTab = null }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Close") },
+                        onClick = {
+                            onClose(index)
+                            expandedTab = null
+                        }
+                    )
+                }
             }
+        }
+        
+        // + button on right
+        IconButton(
+            onClick = onNewFile,
+            modifier = Modifier.size(32.dp),
+        ) {
+            Icon(
+                Icons.Outlined.Add,
+                contentDescription = "New file",
+                tint = Grey500,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
@@ -482,6 +552,8 @@ private fun MiniStatusBar(
     line: Int,
     column: Int,
     onLanguageClick: () -> Unit,
+    onSave: () -> Unit,
+    canSave: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -492,14 +564,6 @@ private fun MiniStatusBar(
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (modified && filename.isNotEmpty()) {
-            Box(
-                Modifier
-                    .size(4.dp)
-                    .background(Accent, CircleShape)
-            )
-            Spacer(Modifier.width(6.dp))
-        }
         if (filename.isNotEmpty()) {
             Text(
                 text = filename,
@@ -508,6 +572,14 @@ private fun MiniStatusBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (modified) {
+                Spacer(Modifier.width(4.dp))
+                Box(
+                    Modifier
+                        .size(4.dp)
+                        .background(Accent, CircleShape)
+                )
+            }
         }
         Spacer(Modifier.weight(1f))
         if (language.isNotEmpty()) {
@@ -524,6 +596,20 @@ private fun MiniStatusBar(
             style = MaterialTheme.typography.labelSmall,
             color = Grey600,
         )
+        Spacer(Modifier.width(8.dp))
+        // Save button
+        IconButton(
+            onClick = onSave,
+            enabled = canSave,
+            modifier = Modifier.size(18.dp),
+        ) {
+            Icon(
+                Icons.Outlined.Save,
+                contentDescription = "Save",
+                tint = if (canSave) Accent else Grey600,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
