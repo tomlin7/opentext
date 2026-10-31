@@ -237,7 +237,7 @@ fun EditorScreen(
                 )
             },
         ) { inner ->
-            Column(Modifier.fillMaxSize().padding(inner)) {
+            Column(Modifier.fillMaxSize().statusBarsPadding().padding(inner)) {
                 if (vm.files.isNotEmpty()) {
                     MiniTabStrip(
                         files = vm.files,
